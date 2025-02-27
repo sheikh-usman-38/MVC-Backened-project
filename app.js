@@ -9,8 +9,8 @@ const path= require("path");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const ExpressError = require("./utils/ExpressError.js");
-// const MONGO_URI = process.env.MONGO_URI
-const dbUrl = process.env.ATLASDB_URL;
+const MONGO_URI = process.env.MONGO_URI
+// const dbUrl = process.env.ATLASDB_URL;
 // console.log('MONGO_URI:', process.env.ATLASDB_URI);
 const listingRouter = require("./routes/listing.js");
 const reviewRouter =require("./routes/review.js");
@@ -23,7 +23,9 @@ const passport = require("passport");
 const localStrategy = require("passport-local");
 const User = require("./models/user.js");
 async function main(){
-     await mongoose.connect(dbUrl);
+     await mongoose.connect(
+        MONGO_URI
+     );
 }
 
 main().then(()=>{ console.log("connected to DB")}).catch((err)=>{console.log(err)});
@@ -34,7 +36,7 @@ app.use(methodOverride("_method"));
 app.engine('ejs', ejsMate);
 app.use(express.static(path.join(__dirname,"/public")));
 const store = MongoStore.create({
-    mongoUrl:dbUrl,
+    mongoUrl:MONGO_URI,
     crypto:{
         secret:   process.env.SECRET,
     },
@@ -80,14 +82,30 @@ app.use("/",userRouter);
 app.all("*",(req,res ,next)=>{
     next(new ExpressError(404,"Page not found"));
 })
-app.use((err ,req ,res ,next)=>{
-    console.error("Error occurred:", err);
-    let {statusCode =500 ,message="Something went wrong"} =err;
-   
-    res.status(statusCode).render("error.ejs",{message});
-    res.status(statusCode).send(message);
-})
+app.use((req, res, next) => {
+    req.setTimeout(60000); // Increase timeout to 60 seconds
+    next();
+});
+app.use((err, req, res, next) => {
+    if (!err.statusCode) err.statusCode = 500;
+    
+    res.status(err.statusCode).json({
+        success: false,
+        message: err.message || "Something went wrong!"
+    });
+});
 
+// app.use((err ,req ,res ,next)=>{
+    
+//     console.error("Error occurred:", err);
+//     let {statusCode =500 ,message="Something went wrong"} =err;
+   
+//     res.status(statusCode).render("error.ejs",{message});
+//     res.status(statusCode).send(message);
+// })
+
+
+  
 
 
 app.listen(8080 ,()=>{
