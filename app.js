@@ -9,8 +9,8 @@ const path= require("path");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const ExpressError = require("./utils/ExpressError.js");
-const MONGO_URI = process.env.MONGO_URI
-// const dbUrl = process.env.ATLASDB_URL;
+// const MONGO_URI = process.env.MONGO_URI
+const dbUrl = process.env.ATLASDB_URL;
 // console.log('MONGO_URI:', process.env.ATLASDB_URI);
 const listingRouter = require("./routes/listing.js");
 const reviewRouter =require("./routes/review.js");
@@ -23,7 +23,7 @@ const passport = require("passport");
 const localStrategy = require("passport-local");
 const User = require("./models/user.js");
 async function main(){
-     await mongoose.connect(MONGO_URI);
+     await mongoose.connect(dbUrl);
 }
 
 main().then(()=>{ console.log("connected to DB")}).catch((err)=>{console.log(err)});
@@ -34,7 +34,7 @@ app.use(methodOverride("_method"));
 app.engine('ejs', ejsMate);
 app.use(express.static(path.join(__dirname,"/public")));
 const store = MongoStore.create({
-    mongoUrl:MONGO_URI,
+    mongoUrl:dbUrl,
     crypto:{
         secret:   process.env.SECRET,
     },
