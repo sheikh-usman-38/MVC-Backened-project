@@ -84,10 +84,7 @@ app.use("/",userRouter);
 app.all("*",(req,res ,next)=>{
     next(new ExpressError(404,"Page not found"));
 })
-app.use((req, res, next) => {
-    req.setTimeout(60000); // Increase timeout to 60 seconds
-    next();
-});
+
 app.use((err, req, res, next) => {
     if (!err.statusCode) err.statusCode = 500;
     
